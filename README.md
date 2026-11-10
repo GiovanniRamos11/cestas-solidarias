@@ -4,7 +4,7 @@ MVP de controle de entrega de cestas básicas e estoque para uma associação co
 
 ## Problema
 A associação controla entregas e estoque em cadernos diferentes. Não se sabe com segurança quem já recebeu a cesta no mês nem quanto resta de cada item.
-## Solução
+## Soluçâo
 Sistema web, usado pelo celular, que registra uma entrega por família por mês, avisa sobre duplicidade e dá baixa automática no estoque.
 ## ODS
 ODS 2 (Fome Zero e Agricultura Sustentável), meta 2.1.
