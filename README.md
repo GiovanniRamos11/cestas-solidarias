@@ -24,3 +24,13 @@ Python, Django 5.2 LTS, Bootstrap 5.3, PostgreSQL (psycopg 3), Gunicorn e WhiteN
 
 ## Aviso
 Todos os dados de exemplo são fictícios.
+
+## Modelos de dados
+O sistema usa cinco entidades:
+- **Usuario**: voluntário ou responsável que acessa o sistema (perfil VOLUNTARIO ou RESPONSAVEL).
+- **Familia**: família atendida (nome do responsável, endereço, número de moradores, ativa).
+- **Item**: produto do estoque (quantidade atual, estoque mínimo e quantidade na cesta padrão).
+- **Entrega**: cesta entregue a uma família em um mês. O banco impede duas entregas à mesma família no mesmo mês.
+- **MovimentacaoEstoque**: entrada de doação ou saída de item, com data e responsável.
+
+Regras garantidas no banco: uma entrega por família por mês, estoque nunca negativo e quantidade de movimentação maior que zero.
