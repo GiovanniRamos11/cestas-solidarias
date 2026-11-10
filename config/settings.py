@@ -10,22 +10,38 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+def env_bool(nome, padrao=False):
+    """Lê uma variável de ambiente booleana (true, 1, yes, on)."""
+    valor = os.environ.get(nome)
+    if valor is None:
+        return padrao
+    return valor.strip().lower() in ("1", "true", "yes", "on")
+
+
+def env_lista(nome, padrao=""):
+    """Lê uma variável de ambiente com itens separados por vírgula."""
+    valor = os.environ.get(nome, padrao)
+    return [item.strip() for item in valor.split(",") if item.strip()]
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fnajum!o0@%x^urc4q5ip8*fsq84j=2f*d1)f+n*@t1bh9br-v'
+# Em desenvolvimento usa uma chave local; em produção DEVE vir do ambiente.
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-chave-apenas-para-desenvolvimento-local"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Fica desligado por padrão; ligue com DEBUG=True só no desenvolvimento.
+DEBUG = env_bool("DEBUG", False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_lista("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 
 # Application definition
@@ -90,6 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 10},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -103,9 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
