@@ -113,3 +113,38 @@ class AcessoTests(TestCase):
         self.client.post("/sair/")
         resposta = self.client.get("/")
         self.assertEqual(resposta.status_code, 302)
+
+
+
+class BuscaFamiliasTests(TestCase):
+    def setUp(self):
+        self.usuario = Usuario.objects.create_user(
+            username="voluntario_teste", password="senha-de-teste-123"
+        )
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        self.joao = Familia.objects.create(
+            nome_responsavel="João Teste Almeida",
+            endereco="Rua Exemplo, 25",
+            numero_moradores=5,
+        )
+        self.inativa = Familia.objects.create(
+            nome_responsavel="João Inativo Souza",
+            endereco="Rua Antiga, 1",
+            numero_moradores=2,
+            ativa=False,
+        )
+
+    def test_busca_sem_acento_e_sem_maiuscula(self):
+        resposta = self.client.get("/", {"q": "joao"})
+        self.assertContains(resposta, "João Teste Almeida")
+
+    def test_busca_nao_lista_familia_inativa(self):
+        resposta = self.client.get("/", {"q": "joao"})
+        self.assertNotContains(resposta, "João Inativo Souza")
+
+    def test_mostra_situacao_do_mes(self):
+        resposta = self.client.get("/", {"q": "joao"})
+        self.assertContains(resposta, "Ainda não recebeu")
+        Entrega.objects.create(familia=self.joao, usuario=self.usuario)
+        resposta = self.client.get("/", {"q": "joao"})
+        self.assertContains(resposta, "Já recebeu em")
