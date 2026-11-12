@@ -141,3 +141,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Usuário personalizado (modelo Usuario do app cestas)
 AUTH_USER_MODEL = 'cestas.Usuario'
+
+# Login e sessão
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'inicio'
+LOGOUT_REDIRECT_URL = 'login'
+SESSION_COOKIE_AGE = 7200  # 2 horas
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
