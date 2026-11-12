@@ -2,6 +2,32 @@
 {% block titulo %}Busca de famílias{% endblock %}
 {% block cabecalho %}Busca de famílias{% endblock %}
 {% block conteudo %}
-<p>Olá, <strong>{{ user.username }}</strong>. Você está autenticado.</p>
-<p>A busca de famílias será construída na próxima etapa.</p>
+<form method="get" class="mb-4">
+  <label for="id_q" class="form-label fw-bold">Nome do responsável</label>
+  <input type="text" name="q" id="id_q" class="form-control mb-2" value="{{ termo }}" autocomplete="off">
+  <button type="submit" class="btn btn-primary w-100">Buscar</button>
+</form>
+
+{% if termo %}
+  {% for familia in resultados %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-1">{{ familia.nome_responsavel }}</h2>
+      <p class="mb-2">{{ familia.endereco }} · {{ familia.numero_moradores }} moradores</p>
+      {% if familia.recebeu_em %}
+      <p class="fw-bold text-success">✔ Já recebeu em {{ familia.recebeu_em|date:"d/m" }}</p>
+      {% else %}
+      <p class="fw-bold text-secondary">○ Ainda não recebeu</p>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="alert alert-warning" role="alert">! Nenhuma família ativa encontrada.</div>
+  {% endfor %}
+{% endif %}
+
+<div class="d-grid gap-2 mt-4">
+  <button type="button" class="btn btn-outline-secondary" disabled>Entrada de doação (em breve)</button>
+  <button type="button" class="btn btn-outline-secondary" disabled>Estoque (em breve)</button>
+</div>
 {% endblock %}
