@@ -1,10 +1,11 @@
 import unicodedata
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
-from .models import Entrega, Familia
+from .models import Entrega, Familia, Item
+from .servicos import EntregaDuplicada, EstoqueInsuficiente, registrar_entrega
 
 
 def _sem_acento(texto):
@@ -34,3 +35,30 @@ def inicio(request):
         "cestas/inicio.html",
         {"termo": termo, "resultados": resultados},
     )
+
+
+@login_required
+def entrega(request, familia_id):
+    familia = get_object_or_404(Familia, pk=familia_id, ativa=True)
+
+    if request.method == "POST":
+        try:
+            registrar_entrega(familia, request.user)
+        except EntregaDuplicada as erro:
+            return render(
+                request,
+                "cestas/resultado.html",
+                {"familia": familia, "tipo": "duplicada", "data": erro.data_anterior},
+            )
+        except EstoqueInsuficiente as erro:
+            return render(
+                request,
+                "cestas/resultado.html",
+                {"familia": familia, "tipo": "estoque", "item": erro.item},
+            )
+        return render(
+            request, "cestas/resultado.html", {"familia": familia, "tipo": "sucesso"}
+        )
+
+    itens = Item.objects.filter(ativo=True, quantidade_na_cesta__gt=0).order_by("nome")
+    return render(request, "cestas/entrega.html", {"familia": familia, "itens": itens})

@@ -18,6 +18,7 @@
       <p class="fw-bold text-success">✔ Já recebeu em {{ familia.recebeu_em|date:"d/m" }}</p>
       {% else %}
       <p class="fw-bold text-secondary">○ Ainda não recebeu</p>
+      <a href="{% url 'entrega' familia.id %}" class="btn btn-success w-100">Registrar entrega</a>
       {% endif %}
     </div>
   </div>
