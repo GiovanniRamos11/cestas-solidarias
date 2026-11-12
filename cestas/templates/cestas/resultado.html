@@ -1,0 +1,22 @@
+{% extends "cestas/base.html" %}
+{% block titulo %}Resultado da entrega{% endblock %}
+{% block cabecalho %}Resultado da entrega{% endblock %}
+{% block conteudo %}
+{% if tipo == "sucesso" %}
+<div class="alert alert-success" role="alert">
+  <strong>✔ Entrega registrada.</strong><br>
+  A cesta de {{ familia.nome_responsavel }} foi entregue e o estoque foi atualizado.
+</div>
+{% elif tipo == "duplicada" %}
+<div class="alert alert-warning" role="alert">
+  <strong>! Esta família já recebeu a cesta neste mês.</strong><br>
+  {{ familia.nome_responsavel }} já recebeu em {{ data|date:"d/m" }}. Nada foi gravado.
+</div>
+{% else %}
+<div class="alert alert-danger" role="alert">
+  <strong>✖ Falta {{ item.nome }} no estoque.</strong><br>
+  Nada foi gravado. Registre a entrada de doação antes de entregar.
+</div>
+{% endif %}
+<a href="{% url 'inicio' %}" class="btn btn-primary w-100">Voltar à busca</a>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "cestas/base.html" %}
+{% block titulo %}Registrar entrega{% endblock %}
+{% block cabecalho %}Registrar entrega{% endblock %}
+{% block conteudo %}
+<div class="card mb-3">
+  <div class="card-body">
+    <h2 class="h5 mb-1">{{ familia.nome_responsavel }}</h2>
+    <p class="mb-0">{{ familia.endereco }} · {{ familia.numero_moradores }} moradores</p>
+  </div>
+</div>
+
+<h3 class="h6 fw-bold">Itens da cesta</h3>
+<ul class="list-group mb-4">
+  {% for item in itens %}
+  <li class="list-group-item d-flex justify-content-between">
+    <span>{{ item.nome }}</span>
+    <span>{{ item.quantidade_na_cesta }} {{ item.unidade }}</span>
+  </li>
+  {% endfor %}
+</ul>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-success w-100 mb-2">Confirmar entrega</button>
+  <a href="{% url 'inicio' %}" class="btn btn-outline-secondary w-100">Cancelar</a>
+</form>
+{% endblock %}

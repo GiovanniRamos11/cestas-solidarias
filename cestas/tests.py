@@ -148,3 +148,51 @@ class BuscaFamiliasTests(TestCase):
         Entrega.objects.create(familia=self.joao, usuario=self.usuario)
         resposta = self.client.get("/", {"q": "joao"})
         self.assertContains(resposta, "Já recebeu em")
+
+
+
+class TelasEntregaTests(TestCase):
+    def setUp(self):
+        self.usuario = Usuario.objects.create_user(
+            username="voluntario_teste", password="senha-de-teste-123"
+        )
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        self.familia = Familia.objects.create(
+            nome_responsavel="João Teste Almeida",
+            endereco="Rua Exemplo, 25",
+            numero_moradores=5,
+        )
+        self.arroz = Item.objects.create(
+            nome="Arroz", unidade="kg",
+            quantidade_atual=10, estoque_minimo=3, quantidade_na_cesta=5,
+        )
+
+    def test_confirmacao_exige_login(self):
+        self.client.logout()
+        resposta = self.client.get(f"/entrega/{self.familia.id}/")
+        self.assertEqual(resposta.status_code, 302)
+
+    def test_tela_de_confirmacao_mostra_a_familia(self):
+        resposta = self.client.get(f"/entrega/{self.familia.id}/")
+        self.assertContains(resposta, "João Teste Almeida")
+        self.assertContains(resposta, "Arroz")
+
+    def test_post_registra_entrega_e_mostra_sucesso(self):
+        resposta = self.client.post(f"/entrega/{self.familia.id}/")
+        self.assertContains(resposta, "Entrega registrada")
+        self.arroz.refresh_from_db()
+        self.assertEqual(self.arroz.quantidade_atual, 5)
+
+    def test_post_duplicado_mostra_aviso(self):
+        self.client.post(f"/entrega/{self.familia.id}/")
+        resposta = self.client.post(f"/entrega/{self.familia.id}/")
+        self.assertContains(resposta, "já recebeu")
+        self.arroz.refresh_from_db()
+        self.assertEqual(self.arroz.quantidade_atual, 5)
+
+    def test_post_sem_estoque_mostra_item_faltando(self):
+        self.arroz.quantidade_atual = 1
+        self.arroz.save()
+        resposta = self.client.post(f"/entrega/{self.familia.id}/")
+        self.assertContains(resposta, "Falta Arroz")
+        self.assertEqual(Entrega.objects.count(), 0)
