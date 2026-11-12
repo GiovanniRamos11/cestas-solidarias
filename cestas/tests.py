@@ -83,3 +83,33 @@ class RegistroEntregaTests(TestCase):
         self.assertEqual(self.arroz.quantidade_atual, 10)
         self.assertEqual(Entrega.objects.count(), 0)
         self.assertEqual(MovimentacaoEstoque.objects.count(), 0)
+
+
+
+class AcessoTests(TestCase):
+    def setUp(self):
+        self.usuario = Usuario.objects.create_user(
+            username="voluntario_teste", password="senha-de-teste-123"
+        )
+
+    def test_anonimo_e_redirecionado_ao_login(self):
+        resposta = self.client.get("/")
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/login/", resposta["Location"])
+
+    def test_login_valido_acessa_a_pagina_inicial(self):
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        resposta = self.client.get("/")
+        self.assertEqual(resposta.status_code, 200)
+
+    def test_login_invalido_mostra_mensagem_generica(self):
+        resposta = self.client.post(
+            "/login/", {"username": "voluntario_teste", "password": "errada"}
+        )
+        self.assertContains(resposta, "Usuário ou senha inválidos")
+
+    def test_sair_encerra_a_sessao(self):
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        self.client.post("/sair/")
+        resposta = self.client.get("/")
+        self.assertEqual(resposta.status_code, 302)
