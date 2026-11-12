@@ -4,18 +4,20 @@
 {% block conteudo %}
 {% if tipo == "sucesso" %}
 <div class="alert alert-success" role="alert">
-  <strong>✔ Entrega registrada.</strong><br>
-  A cesta de {{ familia.nome_responsavel }} foi entregue e o estoque foi atualizado.
+  <p class="resultado-titulo mb-1">✔ Entrega registrada</p>
+  <p class="resultado-destaque mb-0">{{ familia.nome_responsavel }}</p>
 </div>
 {% elif tipo == "duplicada" %}
 <div class="alert alert-warning" role="alert">
-  <strong>! Esta família já recebeu a cesta neste mês.</strong><br>
-  {{ familia.nome_responsavel }} já recebeu em {{ data|date:"d/m" }}. Nada foi gravado.
+  <p class="resultado-titulo mb-1">! Já recebeu neste mês</p>
+  <p class="resultado-destaque mb-1">{{ familia.nome_responsavel }}</p>
+  <p class="resultado-destaque mb-1">Em {{ data|date:"d/m" }}</p>
+  <p class="mb-0">Nada foi gravado.</p>
 </div>
 {% else %}
 <div class="alert alert-danger" role="alert">
-  <strong>✖ Falta {{ item.nome }} no estoque.</strong><br>
-  Nada foi gravado. Registre a entrada de doação antes de entregar.
+  <p class="resultado-titulo mb-1">✖ Falta {{ item.nome }}</p>
+  <p class="mb-0">Nada foi gravado.</p>
 </div>
 {% endif %}
 <a href="{% url 'inicio' %}" class="btn btn-primary w-100">Voltar à busca</a>

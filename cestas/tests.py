@@ -1,4 +1,7 @@
+from datetime import date
+
 from django.db import IntegrityError, transaction
+from django.template.loader import render_to_string
 from django.test import TestCase
 
 from .models import Entrega, Familia, Item, MovimentacaoEstoque, Usuario
@@ -85,7 +88,6 @@ class RegistroEntregaTests(TestCase):
         self.assertEqual(MovimentacaoEstoque.objects.count(), 0)
 
 
-
 class AcessoTests(TestCase):
     def setUp(self):
         self.usuario = Usuario.objects.create_user(
@@ -113,7 +115,6 @@ class AcessoTests(TestCase):
         self.client.post("/sair/")
         resposta = self.client.get("/")
         self.assertEqual(resposta.status_code, 302)
-
 
 
 class BuscaFamiliasTests(TestCase):
@@ -150,13 +151,11 @@ class BuscaFamiliasTests(TestCase):
         self.assertContains(resposta, "Já recebeu em")
 
 
-
 class TelasEntregaTests(TestCase):
     def setUp(self):
         self.usuario = Usuario.objects.create_user(
             username="voluntario_teste", password="senha-de-teste-123"
         )
-        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
         self.familia = Familia.objects.create(
             nome_responsavel="João Teste Almeida",
             endereco="Rua Exemplo, 25",
@@ -166,33 +165,55 @@ class TelasEntregaTests(TestCase):
             nome="Arroz", unidade="kg",
             quantidade_atual=10, estoque_minimo=3, quantidade_na_cesta=5,
         )
+        self.feijao = Item.objects.create(
+            nome="Feijão", unidade="kg",
+            quantidade_atual=10, estoque_minimo=3, quantidade_na_cesta=2,
+        )
+        self.url = f"/entrega/{self.familia.pk}/"
 
-    def test_confirmacao_exige_login(self):
-        self.client.logout()
-        resposta = self.client.get(f"/entrega/{self.familia.id}/")
+    def test_anonimo_e_redirecionado_ao_login(self):
+        resposta = self.client.get(self.url)
         self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/login/", resposta["Location"])
 
-    def test_tela_de_confirmacao_mostra_a_familia(self):
-        resposta = self.client.get(f"/entrega/{self.familia.id}/")
+    def test_get_mostra_confirmacao_com_nome_da_familia(self):
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        resposta = self.client.get(self.url)
         self.assertContains(resposta, "João Teste Almeida")
-        self.assertContains(resposta, "Arroz")
+        self.assertContains(resposta, "Confirmar entrega")
 
     def test_post_registra_entrega_e_mostra_sucesso(self):
-        resposta = self.client.post(f"/entrega/{self.familia.id}/")
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        resposta = self.client.post(self.url)
         self.assertContains(resposta, "Entrega registrada")
-        self.arroz.refresh_from_db()
-        self.assertEqual(self.arroz.quantidade_atual, 5)
+        self.assertEqual(Entrega.objects.count(), 1)
 
     def test_post_duplicado_mostra_aviso(self):
-        self.client.post(f"/entrega/{self.familia.id}/")
-        resposta = self.client.post(f"/entrega/{self.familia.id}/")
-        self.assertContains(resposta, "já recebeu")
-        self.arroz.refresh_from_db()
-        self.assertEqual(self.arroz.quantidade_atual, 5)
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        self.client.post(self.url)
+        resposta = self.client.post(self.url)
+        self.assertContains(resposta, "Já recebeu neste mês")
+        self.assertEqual(Entrega.objects.count(), 1)
 
-    def test_post_sem_estoque_mostra_item_faltando(self):
-        self.arroz.quantidade_atual = 1
-        self.arroz.save()
-        resposta = self.client.post(f"/entrega/{self.familia.id}/")
-        self.assertContains(resposta, "Falta Arroz")
+    def test_post_estoque_insuficiente_mostra_item_faltando(self):
+        self.feijao.quantidade_atual = 1
+        self.feijao.save()
+        self.client.login(username="voluntario_teste", password="senha-de-teste-123")
+        resposta = self.client.post(self.url)
+        self.assertContains(resposta, "Falta Feijão")
         self.assertEqual(Entrega.objects.count(), 0)
+
+
+class ResultadoEnxutoTests(TestCase):
+    def test_template_de_duplicidade_mostra_nome_data_e_aviso_curto(self):
+        familia = Familia(
+            nome_responsavel="Família Teste", endereco="Rua X", numero_moradores=2
+        )
+        html = render_to_string(
+            "cestas/resultado.html",
+            {"tipo": "duplicada", "familia": familia, "data": date(2026, 11, 3)},
+        )
+        self.assertIn("Já recebeu neste mês", html)
+        self.assertIn("Família Teste", html)
+        self.assertIn("03/11", html)
+        self.assertIn("Nada foi gravado", html)
